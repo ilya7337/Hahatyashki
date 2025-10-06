@@ -1,0 +1,91 @@
+
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Заголовки */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* KPI карточки */
+.kpi-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.kpi-card .card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-card .card-text {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Фильтры */
+.filter-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-card .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+/* Графики */
+.js-plotly-plot .plotly .modebar {
+    background: transparent !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .dashboard-header {
+        padding: 1rem;
+    }
+    
+    .kpi-card .card-text {
+        font-size: 1.4rem;
+    }
+}
+
+/* Анимации */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Кастомные цвета */
+.text-primary { color: #3498db !important; }
+.text-success { color: #27ae60 !important; }
+.text-danger { color: #e74c3c !important; }
+.text-warning { color: #f39c12 !important; }
+
+.bg-primary { background-color: #3498db !important; }
+.bg-success { background-color: #27ae60 !important; }
+.bg-danger { background-color: #e74c3c !important; }
+.bg-warning { background-color: #f39c12 !important; }

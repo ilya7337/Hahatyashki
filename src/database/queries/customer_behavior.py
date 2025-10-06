@@ -17,7 +17,7 @@ SELECT
     event_type,
     COUNT(DISTINCT event_id) as events_count
 FROM events
-WHERE event_timestamp BETWEEN %(start_date)s AND %(end_date)s
+WHERE event_timestamp BETWEEN :start_date AND :end_date
 GROUP BY event_type
 ORDER BY 
     CASE event_type
@@ -39,7 +39,7 @@ SELECT
     COUNT(DISTINCT s.transaction_id) * 1.0 / COUNT(DISTINCT us.customer_id) as orders_per_user
 FROM user_segments us
 LEFT JOIN sales s ON us.customer_id = s.customer_id
-    AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+    AND s.transaction_date BETWEEN :start_date AND :end_date
 GROUP BY us.region
 ORDER BY total_orders DESC
 """
@@ -53,7 +53,7 @@ SELECT
     COUNT(DISTINCT r.return_id) as total_returns
 FROM user_segments us
 LEFT JOIN sales s ON us.customer_id = s.customer_id
-    AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+    AND s.transaction_date BETWEEN :start_date AND :end_date
 LEFT JOIN products p ON s.product_id = p.product_id
 LEFT JOIN returns r ON s.transaction_id = r.transaction_id
 GROUP BY us.segment
@@ -67,7 +67,7 @@ SELECT
     COUNT(DISTINCT traffic_id) as sessions_count,
     COUNT(DISTINCT customer_id) as unique_users
 FROM traffic
-WHERE session_start BETWEEN %(start_date)s AND %(end_date)s
+WHERE session_start BETWEEN :start_date AND :end_date
 GROUP BY channel
 ORDER BY sessions_count DESC
 """
@@ -79,7 +79,7 @@ SELECT
     COUNT(DISTINCT traffic_id) as sessions_count,
     COUNT(DISTINCT customer_id) as unique_users
 FROM traffic
-WHERE session_start BETWEEN %(start_date)s AND %(end_date)s
+WHERE session_start BETWEEN :start_date AND :end_date
 GROUP BY device
 ORDER BY sessions_count DESC
 """
@@ -97,7 +97,7 @@ SELECT
     AVG(s.quantity * p.price) as avg_order_value
 FROM user_segments us
 LEFT JOIN sales s ON us.customer_id = s.customer_id
-    AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+    AND s.transaction_date BETWEEN :start_date AND :end_date
 LEFT JOIN products p ON s.product_id = p.product_id
 GROUP BY loyalty_level
 ORDER BY customers_count DESC

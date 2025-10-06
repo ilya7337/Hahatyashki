@@ -143,6 +143,8 @@ def register_business_callbacks(app):
             
             # Получение данных
             kpi_data = get_business_kpi_data(params)
+            print(123)
+            print(kpi_data)
             sales_trend_data = db_manager.execute_query(SALES_TREND_QUERY, params)
             category_data = db_manager.execute_query(CATEGORY_SALES_QUERY, params)
             supplier_data = db_manager.execute_query(SUPPLIER_PERFORMANCE_QUERY, params)

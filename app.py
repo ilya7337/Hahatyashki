@@ -9,6 +9,10 @@ from dash import Input, Output
 
 from config import config
 from src.components.layout import create_layout, get_page_layout
+from src.components.pages.business_sales import register_business_callbacks
+from src.components.pages.customer_behavior import register_customer_callbacks
+from src.components.pages.advertising_marketing import register_advertising_callbacks
+from src.components.pages.service_quality import register_service_callbacks
 
 # Настройка логирования
 logging.basicConfig(
@@ -29,7 +33,8 @@ def create_app():
         ],
         meta_tags=[
             {"name": "viewport", "content": "width=device-width, initial-scale=1"}
-        ]
+        ],
+        suppress_callback_exceptions=True
     )
     
     app.title = "Малинка Analytics"
@@ -41,8 +46,9 @@ def create_app():
     return app
 
 def register_callbacks(app):
-    """Зарегистрировать основные callback'и"""
+    """Зарегистрировать все callback'и приложения"""
     
+    # Основной callback для навигации
     @app.callback(
         Output('page-content', 'children'),
         [Input('url', 'pathname')]
@@ -51,6 +57,12 @@ def register_callbacks(app):
         """Отобразить страницу в зависимости от URL"""
         logger.info(f"Loading page: {pathname}")
         return get_page_layout(pathname)
+    
+    # Регистрируем callback'и для каждой страницы
+    register_business_callbacks(app)
+    register_customer_callbacks(app)
+    register_advertising_callbacks(app)
+    register_service_callbacks(app)
 
 def main():
     """Основная функция запуска приложения"""

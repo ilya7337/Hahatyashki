@@ -19,7 +19,7 @@ SELECT
         ELSE 0 
     END as ctr
 FROM ad_revenue
-WHERE date BETWEEN %(start_date)s AND %(end_date)s
+WHERE date BETWEEN :start_date AND :end_date
 GROUP BY campaign_name
 ORDER BY roi DESC
 """
@@ -33,7 +33,7 @@ SELECT
     SUM(clicks) as daily_clicks,
     SUM(impressions) as daily_impressions
 FROM ad_revenue
-WHERE date BETWEEN %(start_date)s AND %(end_date)s
+WHERE date BETWEEN :start_date AND :end_date
 GROUP BY date
 ORDER BY date
 """
@@ -52,7 +52,7 @@ SELECT
     END as roi
 FROM ad_revenue ar
 JOIN products p ON ar.product_id = p.product_id
-WHERE ar.date BETWEEN %(start_date)s AND %(end_date)s
+WHERE ar.date BETWEEN :start_date AND :end_date
 GROUP BY p.product_id, p.product_name, p.category
 ORDER BY roi DESC
 LIMIT 15
@@ -71,8 +71,8 @@ SELECT
     END as conversion_rate
 FROM traffic t
 LEFT JOIN sales s ON t.customer_id = s.customer_id
-    AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
-WHERE t.session_start BETWEEN %(start_date)s AND %(end_date)s
+    AND s.transaction_date BETWEEN :start_date AND :end_date
+WHERE t.session_start BETWEEN :start_date AND :end_date
 GROUP BY t.channel
 ORDER BY conversion_rate DESC
 """
@@ -88,7 +88,7 @@ SELECT
         ELSE 0 
     END as weekly_roi
 FROM ad_revenue
-WHERE date BETWEEN %(start_date)s AND %(end_date)s
+WHERE date BETWEEN :start_date AND :end_date
 GROUP BY week_start
 ORDER BY week_start
 """
@@ -104,7 +104,7 @@ SELECT
         ELSE 0 
     END as ctr
 FROM ad_revenue
-WHERE date BETWEEN %(start_date)s AND %(end_date)s
+WHERE date BETWEEN :start_date AND :end_date
 GROUP BY campaign_name
 HAVING SUM(impressions) > 1000
 ORDER BY ctr DESC

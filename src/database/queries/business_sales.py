@@ -12,7 +12,7 @@ SELECT
 FROM sales s
 JOIN products p ON s.product_id = p.product_id
 LEFT JOIN returns r ON s.transaction_id = r.transaction_id
-WHERE s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE s.transaction_date BETWEEN :start_date AND :end_date
 """
 
 # Динамика продаж
@@ -23,7 +23,7 @@ SELECT
     SUM(s.quantity * p.price) as daily_revenue
 FROM sales s
 JOIN products p ON s.product_id = p.product_id
-WHERE s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE s.transaction_date BETWEEN :start_date AND :end_date
 GROUP BY DATE(s.transaction_date)
 ORDER BY date
 """
@@ -36,7 +36,7 @@ SELECT
     SUM(s.quantity * p.price) as category_revenue
 FROM sales s
 JOIN products p ON s.product_id = p.product_id
-WHERE s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE s.transaction_date BETWEEN :start_date AND :end_date
 GROUP BY p.category
 ORDER BY category_revenue DESC
 """
@@ -51,7 +51,7 @@ SELECT
 FROM sales sa
 JOIN products p ON sa.product_id = p.product_id
 JOIN suppliers s ON p.supplier_id = s.supplier_id
-WHERE sa.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE sa.transaction_date BETWEEN :start_date AND :end_date
 GROUP BY s.supplier_name
 ORDER BY total_revenue DESC
 LIMIT 10
@@ -65,13 +65,13 @@ SELECT
     COUNT(r.return_id) * 100.0 / (SELECT COUNT(*) FROM returns WHERE EXISTS (
         SELECT 1 FROM sales s 
         WHERE s.transaction_id = returns.transaction_id 
-        AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+        AND s.transaction_date BETWEEN :start_date AND :end_date
     )) as percentage
 FROM returns r
 WHERE EXISTS (
     SELECT 1 FROM sales s 
     WHERE s.transaction_id = r.transaction_id 
-    AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+    AND s.transaction_date BETWEEN :start_date AND :end_date
 )
 GROUP BY r.reason
 ORDER BY returns_count DESC
@@ -103,7 +103,7 @@ SELECT
     SUM(s.quantity * p.price) as total_revenue
 FROM sales s
 JOIN products p ON s.product_id = p.product_id
-WHERE s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE s.transaction_date BETWEEN :start_date AND :end_date
 GROUP BY p.product_id, p.product_name, p.category
 ORDER BY total_revenue DESC
 LIMIT 15

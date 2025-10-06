@@ -10,7 +10,7 @@ SELECT
     AVG(resolution_time_minutes) as avg_resolution_time,
     COUNT(CASE WHEN resolved THEN 1 END) * 100.0 / COUNT(*) as resolution_rate
 FROM customer_support
-WHERE support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE support_date BETWEEN :start_date AND :end_date
 GROUP BY issue_type
 ORDER BY tickets_count DESC
 """
@@ -22,7 +22,7 @@ SELECT
     COUNT(ticket_id) as daily_tickets,
     AVG(resolution_time_minutes) as avg_resolution_time
 FROM customer_support
-WHERE support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE support_date BETWEEN :start_date AND :end_date
 GROUP BY DATE(support_date)
 ORDER BY date
 """
@@ -36,7 +36,7 @@ SELECT
     COUNT(CASE WHEN cs.resolved THEN 1 END) * 100.0 / COUNT(*) as resolution_rate
 FROM customer_support cs
 JOIN user_segments us ON cs.customer_id = us.customer_id
-WHERE cs.support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE cs.support_date BETWEEN :start_date AND :end_date
 GROUP BY us.segment
 ORDER BY tickets_count DESC
 """
@@ -53,7 +53,7 @@ SELECT
     COUNT(ticket_id) as tickets_count,
     AVG(resolution_time_minutes) as avg_resolution_time
 FROM customer_support
-WHERE support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE support_date BETWEEN :start_date AND :end_date
 GROUP BY resolution_time_bucket
 ORDER BY tickets_count DESC
 """
@@ -76,10 +76,10 @@ LEFT JOIN returns r ON cs.customer_id = r.customer_id
         WHERE EXISTS (
             SELECT 1 FROM sales s 
             WHERE s.transaction_id = returns.transaction_id 
-            AND s.transaction_date BETWEEN %(start_date)s AND %(end_date)s
+            AND s.transaction_date BETWEEN :start_date AND :end_date
         )
     )
-WHERE cs.support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE cs.support_date BETWEEN :start_date AND :end_date
 GROUP BY cs.issue_type
 ORDER BY support_tickets DESC
 """
@@ -93,7 +93,7 @@ SELECT
     COUNT(CASE WHEN cs.resolved THEN 1 END) * 100.0 / COUNT(*) as resolution_rate
 FROM customer_support cs
 JOIN user_segments us ON cs.customer_id = us.customer_id
-WHERE cs.support_date BETWEEN %(start_date)s AND %(end_date)s
+WHERE cs.support_date BETWEEN :start_date AND :end_date
 GROUP BY us.region
 ORDER BY tickets_count DESC
 """

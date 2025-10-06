@@ -7,50 +7,8 @@
 
 # Структура проекта
 
-malinka_dashboard/
-│
-├── app.py                          # Точка входа приложения
-├── config.py                       # Конфигурация и настройки
-├── requirements.txt                # Зависимости
-├── .env.example                    # Пример переменных окружения
-├── .gitignore
-│
-├── src/                            # Исходный код
-│   ├── __init__.py
-│   ├── database/                   # Работа с базой данных
-│   │   ├── __init__.py
-│   │   ├── connection.py           # Подключение к БД
-│   │   ├── queries.py              # SQL запросы
-│   │   └── models.py               # Модели данных
-│   │
-│   ├── components/                 # Компоненты Dash
-│   │   ├── __init__.py
-│   │   ├── layout.py               # Основной макет
-│   │   ├── callbacks.py            # Все callback'и
-│   │   ├── kpi_cards.py            # KPI карточки
-│   │   ├── charts.py               # Графики и визуализации
-│   │   └── filters.py              # Фильтры и контролы
-│   │
-│   ├── utils/                      # Вспомогательные функции
-│   │   ├── __init__.py
-│   │   ├── data_processor.py       # Обработка данных
-│   │   ├── calculations.py         # Расчеты метрик
-│   │   └── validators.py           # Валидация данных
-│   │
-│   └── assets/                     # Статические файлы
-│       ├── style.css
-│       └── custom.js
-│
-├── tests/                          # Тесты
-│   ├── __init__.py
-│   ├── test_database.py
-│   ├── test_calculations.py
-│   └── conftest.py
-│
-└── docs/                           # Документация
-    ├── deployment.md
-    ├── api.md
-    └── data_schema.md
+
+<img width="395" height="738" alt="image" src="https://github.com/user-attachments/assets/de4ef768-a5a9-4e24-90b0-1e741d6e10a0" />
 
 
 

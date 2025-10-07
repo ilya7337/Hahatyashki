@@ -235,19 +235,19 @@ def create_top_products_chart(data):
     fig = px.bar(
         data,
         x='total_revenue',
-        y='product_name',  # ← Используем название товара вместо ID
+        y='product_name',  
         orientation='h',
         color='category',
         title='Топ товаров по выручке',
         labels={
             'total_revenue': 'Выручка',
-            'product_name': 'Название товара',  # ← Обновленная подпись
+            'product_name': 'Название товара',  
             'category': 'Категория'
         }
     )
     
     fig.update_layout(
         showlegend=True,
-        yaxis={'categoryorder': 'total ascending'}  # Сортировка по выручке
+        yaxis={'categoryorder': 'total ascending'}  
     )
     return fig

@@ -1,4 +1,4 @@
-from dash import html, dcc, Input, Output, callback
+from dash import html, dcc, Input, Output, callback, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
@@ -8,7 +8,7 @@ from src.database.connection import db_manager
 from src.database.queries.service_quality import *
 from src.components.kpi_cards import create_kpi_card
 from src.components.charts import chart_builder
-from src.components.filters import create_date_filter
+from src.components.filters import create_date_filter, create_issue_type_filter, create_segment_filter, create_region_filter
 from src.utils.data_processor import data_processor
 
 logger = logging.getLogger(__name__)
@@ -80,49 +80,21 @@ def create_service_filters():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(create_date_filter(), lg=3, md=6),
-                dbc.Col([
-                    html.Label("Тип обращения", className="form-label"),
-                    dcc.Dropdown(
-                        id='issue-type-filter',
-                        options=[{'label': 'Все типы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Сегмент клиентов", className="form-label"),
-                    dcc.Dropdown(
-                        id='service-segment-filter',
-                        options=[{'label': 'Все сегменты', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Регион", className="form-label"),
-                    dcc.Dropdown(
-                        id='service-region-filter',
-                        options=[{'label': 'Все регионы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
+                dbc.Col(create_region_filter(), lg=3, md=6),
+                dbc.Col(create_segment_filter(), lg=3, md=6),
+                dbc.Col(create_issue_type_filter(), lg=3, md=6),
             ]),
             dbc.Row([
                 dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-service-filters", 
-                              color="primary", className="me-2"),
-                    dbc.Button("Сбросить", id="reset-service-filters", 
-                              color="outline-secondary"),
-                ], lg=12, className="mb-3"),
-            ]),
+                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
+                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
+                ], lg=12, className="mt-2")
+            ])
         ])
     ], className="mb-4")
 
 # Callbacks для качества обслуживания
 def register_service_callbacks(app):
-    """Зарегистрировать callback'ы для качества обслуживания"""
-    
     @app.callback(
         [Output('service-kpi-cards', 'children'),
          Output('support-metrics-chart', 'figure'),
@@ -131,20 +103,25 @@ def register_service_callbacks(app):
          Output('resolution-time-chart', 'figure'),
          Output('support-returns-chart', 'figure'),
          Output('regional-support-chart', 'figure')],
-        [Input('apply-service-filters', 'n_clicks'),
-         Input('interval-component', 'n_intervals')],
-        [Input('date-range', 'start_date'),
-         Input('date-range', 'end_date')]
+        [Input('apply-service-filters', 'n_clicks')],
+        [State('date-range', 'start_date'),
+         State('date-range', 'end_date'),
+         State('issue-type-filter', 'value'),
+         State('service-segment-filter', 'value'),
+         State('service-region-filter', 'value')]
     )
-    def update_service_dashboard(n_clicks, n_intervals, start_date, end_date):
-        """Обновить дашборд качества обслуживания"""
+    def update_service_dashboard(n_clicks, start_date, end_date, issue_type, segment, region):
+        """Обновить дашборд с применением фильтров"""
         try:
             params = {
                 'start_date': start_date,
-                'end_date': end_date
+                'end_date': end_date,
+                'issue_type': issue_type,
+                'segment': segment,
+                'region': region
             }
-            
-            # Получение данных
+
+            # SQL-запросы должны учитывать фильтры (см. ниже)
             kpi_data = get_service_kpi_data(params)
             support_data = db_manager.execute_query(SUPPORT_METRICS_QUERY, params)
             support_trend_data = db_manager.execute_query(SUPPORT_TREND_QUERY, params)
@@ -152,26 +129,37 @@ def register_service_callbacks(app):
             resolution_time_data = db_manager.execute_query(RESOLUTION_TIME_ANALYSIS_QUERY, params)
             support_returns_data = db_manager.execute_query(SUPPORT_RETURNS_CORRELATION_QUERY, params)
             regional_support_data = db_manager.execute_query(REGIONAL_SUPPORT_QUERY, params)
-            
-            # Создание KPI карточек
+
+            # KPI карточки
             kpi_cards = create_service_kpi_cards(kpi_data)
-            
-            # Создание графиков
+
+            # Графики
             support_fig = chart_builder.create_support_metrics_chart(support_data)
             support_trend_fig = create_support_trend_chart(support_trend_data)
             segment_support_fig = create_segment_support_chart(segment_support_data)
             resolution_time_fig = create_resolution_time_chart(resolution_time_data)
             support_returns_fig = create_support_returns_chart(support_returns_data)
             regional_support_fig = create_regional_support_chart(regional_support_data)
-            
-            return [kpi_cards, support_fig, support_trend_fig, segment_support_fig, 
-                   resolution_time_fig, support_returns_fig, regional_support_fig]
-            
+
+            return [kpi_cards, support_fig, support_trend_fig, segment_support_fig,
+                    resolution_time_fig, support_returns_fig, regional_support_fig]
+
         except Exception as e:
-            logger.error(f"Error updating service dashboard: {e}")
+            logger.error(f"Error updating dashboard: {e}")
             empty_fig = px.bar(title="Нет данных")
-            return [html.Div("Ошибка загрузки данных")] + [empty_fig] * 6
-    
+            return [html.Div("Ошибка загрузки данных")] + [empty_fig]*6
+
+    # Сброс фильтров
+    @app.callback(
+        [Output('issue-type-filter', 'value'),
+         Output('service-segment-filter', 'value'),
+         Output('service-region-filter', 'value'),
+         Output('period-selector', 'value')],
+        [Input('reset-service-filters', 'n_clicks')]
+    )
+    def reset_filters(n_clicks):
+        return 'all', 'all', 'all', '30d'
+
     return app
 
 def get_service_kpi_data(params):

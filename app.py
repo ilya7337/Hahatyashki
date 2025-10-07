@@ -29,8 +29,10 @@ def create_app():
     app = dash.Dash(
         __name__,
         external_stylesheets=[
+            'src\\assets\\style.css',
             'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css',
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+            
         ],
         meta_tags=[
             {"name": "viewport", "content": "width=device-width, initial-scale=1"}

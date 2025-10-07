@@ -171,7 +171,6 @@ def register_filter_callbacks(app):
             from src.database.connection import db_manager
             
             result = db_manager.execute_query(query)
-            print(234)
             if not result.empty:
                 column_name = result.columns[0]  # Получаем имя первой колонки
                 options = [{'label': default_label, 'value': 'all'}]
@@ -221,7 +220,7 @@ def register_filter_callbacks(app):
     @app.callback(
     Output('service-region-filter', 'options'),
     Input('app-load', 'children'),
-    prevent_initial_call=False
+    prevent_initial_call=False,
     )
     def load_regions(trigger):
         """Загрузить регионы из user_segments"""
@@ -236,11 +235,11 @@ def register_filter_callbacks(app):
         """Загрузить каналы трафика"""
         return load_filter_options(CHANNELS_QUERY, "Все каналы")
     
-    @callback(
+    @app.callback(
     Output('supplier-filter', 'options'),
     [Input('app-load', 'children')]
 )
-    def load_suppliers(n_intervals):
+    def load_suppliers(trigger):
         """Загрузить поставщиков из базы данных"""
         try:
             logger.info("Loading suppliers from database...")
@@ -250,4 +249,6 @@ def register_filter_callbacks(app):
             logger.error(f"Error loading suppliers: {e}")
             return [{'label': 'Все поставщики', 'value': 'all'}]
     
+
+
     return app

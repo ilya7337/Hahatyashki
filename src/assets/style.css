@@ -1,91 +1,109 @@
-
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Business Sales Dashboard Styles */
+.business-sales-container {
     background-color: #f8f9fa;
 }
 
-/* Заголовки */
-.dashboard-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 10px;
-    padding: 2rem;
+.business-sales-title {
+    color: #2C3E50;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.business-sales-subtitle {
+    color: #7F8C8D;
+    margin-bottom: 30px;
+}
+
+.business-kpi-section {
     margin-bottom: 2rem;
 }
 
-/* KPI карточки */
-.kpi-card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    border: none;
+.business-chart-container {
+    margin-bottom: 1.5rem;
+}
+
+/* Color Scheme */
+.color-primary { color: #2E86AB; }
+.color-secondary { color: #A23B72; }
+.color-accent1 { color: #F18F01; }
+.color-accent2 { color: #C73E1D; }
+.color-accent3 { color: #3C91E6; }
+
+.bg-primary { background-color: #2E86AB; }
+.bg-secondary { background-color: #A23B72; }
+.bg-accent1 { background-color: #F18F01; }
+.bg-accent2 { background-color: #C73E1D; }
+.bg-accent3 { background-color: #3C91E6; }
+
+/* Chart styling */
+.chart-card {
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.kpi-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-}
-
-.kpi-card .card-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.kpi-card .card-text {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 0;
-}
-
-/* Фильтры */
-.filter-card {
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.filter-card .form-label {
+.chart-title {
+    font-size: 18px;
     font-weight: 600;
+    color: #2C3E50;
+    margin-bottom: 15px;
+}
+
+/* Filter styles */
+.business-filters-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e9ecef;
+}
+
+.filter-label {
+    font-weight: 500;
     color: #495057;
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
 }
 
-/* Графики */
-.js-plotly-plot .plotly .modebar {
-    background: transparent !important;
+/* KPI Cards Styling */
+.kpi-card-revenue .card {
+    border-left: 4px solid #2E86AB;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .dashboard-header {
-        padding: 1rem;
-    }
+.kpi-card-orders .card {
+    border-left: 4px solid #A23B72;
+}
+
+.kpi-card-avg-order .card {
+    border-left: 4px solid #F18F01;
+}
+
+.kpi-card-returns .card {
+    border-left: 4px solid #C73E1D;
     
-    .kpi-card .card-text {
-        font-size: 1.4rem;
-    }
 }
 
-/* Анимации */
-.fade-in {
-    animation: fadeIn 0.5s ease-in;
+/* Или если хочешь изменить цвет текста */
+.kpi-card-revenue .card-title {
+    color: #2E86AB;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.kpi-card-orders .card-title {
+    color: #A23B72;
 }
 
-/* Кастомные цвета */
-.text-primary { color: #3498db !important; }
-.text-success { color: #27ae60 !important; }
-.text-danger { color: #e74c3c !important; }
-.text-warning { color: #f39c12 !important; }
+.kpi-card-avg-order .card-title {
+    color: #F18F01;
+}
 
-.bg-primary { background-color: #3498db !important; }
-.bg-success { background-color: #27ae60 !important; }
-.bg-danger { background-color: #e74c3c !important; }
-.bg-warning { background-color: #f39c12 !important; }
+.kpi-card-returns .card-title {
+    color: #C73E1D;
+}
+
+.business-chart-container{
+    background-color: rgba(44, 62, 80, 0.8); /* Полупрозрачный */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Тень */
+    backdrop-filter: blur(10px); /* Эффект размытия для стекломорфизма */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Легкая граница */
+    padding: 15px;
+    margin-bottom: 1.5rem;
+}
+

@@ -124,5 +124,5 @@ WHERE s.transaction_date BETWEEN :start_date AND :end_date
     AND (:supplier IS NULL OR sup.supplier_name = :supplier)
 GROUP BY p.product_id, p.product_name, p.category
 ORDER BY total_revenue DESC
-LIMIT 15
+LIMIT 10
 """

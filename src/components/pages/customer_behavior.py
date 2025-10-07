@@ -8,7 +8,7 @@ from src.database.connection import db_manager
 from src.database.queries.customer_behavior import *
 from src.components.kpi_cards import create_kpi_card
 from src.components.charts import chart_builder
-from src.components.filters import create_date_filter
+from src.components.filters import create_date_filter, create_region_filter, create_segment_filter
 from src.utils.data_processor import data_processor
 
 logger = logging.getLogger(__name__)
@@ -88,33 +88,8 @@ def create_customer_filters():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(create_date_filter(), lg=3, md=6),
-                dbc.Col([
-                    html.Label("Сегмент клиентов", className="form-label"),
-                    dcc.Dropdown(
-                        id='customer-segment-filter',
-                        options=[{'label': 'Все сегменты', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Регион", className="form-label"),
-                    dcc.Dropdown(
-                        id='region-filter',
-                        options=[{'label': 'Все регионы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Канал трафика", className="form-label"),
-                    dcc.Dropdown(
-                        id='traffic-channel-filter',
-                        options=[{'label': 'Все каналы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
+                dbc.Col(create_segment_filter(), lg=3, md=6, className="mb-3"),
+                dbc.Col(create_region_filter(), lg=3, md=6, className="mb-3"),
             ])
         ])
     ], className="mb-4")
@@ -133,19 +108,23 @@ def register_customer_callbacks(app):
          Output('user-devices-chart', 'figure'),
          Output('customer-loyalty-chart', 'figure')],
         [Input('date-range', 'start_date'),
-         Input('date-range', 'end_date')]
+         Input('date-range', 'end_date'),
+         Input('service-segment-filter', 'value'),
+         Input('service-region-filter', 'value')]
     )
-    def update_customer_dashboard(start_date, end_date):
+    def update_customer_dashboard(start_date, end_date, segment, region):
         """Обновить дашборд клиентов и поведения"""
         try:
             params = {
                 'start_date': start_date,
-                'end_date': end_date
+                'end_date': end_date,
+                'segment': segment if segment != 'all' else None,
+                'region': region if region != 'all' else None
             }
             
             # Получение данных
             kpi_data = get_customer_kpi_data(params)
-            segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, {})
+            segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, params)
             funnel_data = db_manager.execute_query(EVENTS_FUNNEL_QUERY, params)
             regional_data = db_manager.execute_query(REGIONAL_ACTIVITY_QUERY, params)
             segment_behavior_data = db_manager.execute_query(SEGMENT_BEHAVIOR_QUERY, params)

@@ -23,6 +23,7 @@ def create_layout():
         
         # Скрытые элементы
         dcc.Store(id='data-store'),
+        dcc.Store(id='app-load', data='loaded'),  # Триггер загрузки приложения
         dcc.Interval(id='interval-component', interval=300000, n_intervals=0),
     ])
 

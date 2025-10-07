@@ -8,7 +8,7 @@ from src.database.connection import db_manager
 from src.database.queries.business_sales import *
 from src.components.kpi_cards import create_kpi_card
 from src.components.charts import chart_builder
-from src.components.filters import create_date_filter
+from src.components.filters import create_date_filter, create_category_filter, create_supplier_filter
 from src.utils.data_processor import data_processor
 
 logger = logging.getLogger(__name__)
@@ -83,32 +83,8 @@ def create_business_filters():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(create_date_filter(), lg=4, md=6),
-                dbc.Col([
-                    html.Label("Категория товаров", className="form-label"),
-                    dcc.Dropdown(
-                        id='business-category-filter',
-                        options=[{'label': 'Все категории', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=4, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Поставщик", className="form-label"),
-                    dcc.Dropdown(
-                        id='supplier-filter',
-                        options=[{'label': 'Все поставщики', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=4, md=6, className="mb-3"),
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-business-filters", 
-                              color="primary", className="me-2"),
-                    dbc.Button("Сбросить", id="reset-business-filters", 
-                              color="outline-secondary"),
-                ], lg=12, className="mb-3"),
+                dbc.Col(create_category_filter(), lg=4, md=6),
+                dbc.Col(create_supplier_filter(), lg=4, md=6),
             ]),
         ])
     ], className="mb-4")
@@ -125,31 +101,31 @@ def register_business_callbacks(app):
          Output('returns-analysis-chart', 'figure'),
          Output('inventory-status-chart', 'figure'),
          Output('top-products-chart', 'figure')],
-        [Input('apply-business-filters', 'n_clicks'),
-         Input('interval-component', 'n_intervals')],
         [Input('date-range', 'start_date'),
-         Input('date-range', 'end_date')]
+         Input('date-range', 'end_date'),
+         Input('basic-category-filter', 'value'),
+         Input('supplier-filter', 'value')]
     )
-    def update_business_dashboard(n_clicks, n_intervals, start_date, end_date):
+    def update_business_dashboard(start_date, end_date, selected_category, supplier):
         """Обновить дашборд бизнес-аналитики"""
         from datetime import datetime
-        
         try:
+            print(supplier)
             # Параметры для запросов
             params = {
                 'start_date': start_date,
-                'end_date': end_date
+                'end_date': end_date,
+                'category': selected_category if selected_category != 'all' else None,
+                'supplier': supplier if supplier != 'all' else None,
             }
             
             # Получение данных
             kpi_data = get_business_kpi_data(params)
-            print(123)
-            print(kpi_data)
             sales_trend_data = db_manager.execute_query(SALES_TREND_QUERY, params)
             category_data = db_manager.execute_query(CATEGORY_SALES_QUERY, params)
             supplier_data = db_manager.execute_query(SUPPLIER_PERFORMANCE_QUERY, params)
             returns_data = db_manager.execute_query(RETURNS_ANALYSIS_QUERY, params)
-            inventory_data = db_manager.execute_query(INVENTORY_STATUS_QUERY, {})
+            inventory_data = db_manager.execute_query(INVENTORY_STATUS_QUERY, params)
             top_products_data = db_manager.execute_query(TOP_PRODUCTS_QUERY, params)
             
             # Создание KPI карточек
@@ -259,16 +235,19 @@ def create_top_products_chart(data):
     fig = px.bar(
         data,
         x='total_revenue',
-        y='product_name',
+        y='product_name',  # ← Используем название товара вместо ID
         orientation='h',
         color='category',
         title='Топ товаров по выручке',
         labels={
             'total_revenue': 'Выручка',
-            'product_name': 'Товар',
+            'product_name': 'Название товара',  # ← Обновленная подпись
             'category': 'Категория'
         }
     )
     
-    fig.update_layout(showlegend=True)
+    fig.update_layout(
+        showlegend=True,
+        yaxis={'categoryorder': 'total ascending'}  # Сортировка по выручке
+    )
     return fig

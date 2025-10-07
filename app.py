@@ -9,6 +9,7 @@ from dash import Input, Output
 
 from config import config
 from src.components.layout import create_layout, get_page_layout
+from src.components.filters import register_filter_callbacks
 from src.components.pages.business_sales import register_business_callbacks
 from src.components.pages.customer_behavior import register_customer_callbacks
 from src.components.pages.advertising_marketing import register_advertising_callbacks
@@ -58,6 +59,8 @@ def register_callbacks(app):
         logger.info(f"Loading page: {pathname}")
         return get_page_layout(pathname)
     
+    # Регистрируем callback'и для фильтров
+    register_filter_callbacks(app)
     # Регистрируем callback'и для каждой страницы
     register_business_callbacks(app)
     register_customer_callbacks(app)

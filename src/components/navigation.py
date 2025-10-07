@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import html
 import dash_bootstrap_components as dbc
 
 def create_navigation():
@@ -21,7 +21,7 @@ def create_navigation():
                 dbc.NavItem(
                     dbc.NavLink(
                         "💰 Бизнес-аналитика",
-                        href="/business-sales",
+                        href="/",
                         active="exact",
                         style={
                             'fontWeight': '600',

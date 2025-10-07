@@ -3,7 +3,6 @@ import dash_bootstrap_components as dbc
 
 from .navigation import create_navigation
 from .pages import (
-    create_home_layout,
     create_business_sales_layout,
     create_customer_behavior_layout,
     create_advertising_marketing_layout,
@@ -29,13 +28,12 @@ def create_layout():
 
 def get_page_layout(pathname):
     """Получить layout для текущего пути"""
-    if pathname == '/business-sales':
-        return create_business_sales_layout()
-    elif pathname == '/customer-behavior':
+    if pathname == '/customer-behavior':
         return create_customer_behavior_layout()
     elif pathname == '/advertising-marketing':
         return create_advertising_marketing_layout()
     elif pathname == '/service-quality':
         return create_service_quality_layout()
     else:
-        return create_home_layout()
+        # По умолчанию показываем бизнес-аналитику
+        return create_business_sales_layout()

@@ -86,12 +86,6 @@ def create_business_filters():
                 dbc.Col(create_category_filter(), lg=4, md=6),
                 dbc.Col(create_supplier_filter(), lg=4, md=6),
             ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
-                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
-                ], lg=12, className="mt-2")
-            ])
         ])
     ], className="mb-4")
 
@@ -107,13 +101,12 @@ def register_business_callbacks(app):
          Output('returns-analysis-chart', 'figure'),
          Output('inventory-status-chart', 'figure'),
          Output('top-products-chart', 'figure')],
-        [Input('apply-service-filters', 'n_clicks')],
-        [State('date-range', 'start_date'),
-         State('date-range', 'end_date'),
-         State('basic-category-filter', 'value'),
-         State('supplier-filter', 'value')]
+        [Input('date-range', 'start_date'),
+         Input('date-range', 'end_date'),
+         Input('basic-category-filter', 'value'),
+         Input('supplier-filter', 'value')]
     )
-    def update_business_dashboard(n_clicks, start_date, end_date, selected_category, supplier):
+    def update_business_dashboard(start_date, end_date, selected_category, supplier):
         """Обновить дашборд бизнес-аналитики"""
         from datetime import datetime
         try:

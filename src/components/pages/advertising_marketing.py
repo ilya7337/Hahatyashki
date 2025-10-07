@@ -111,12 +111,6 @@ def create_advertising_filters():
                     ),
                 ], lg=4, md=6, className="mb-3"),
             ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
-                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
-                ], lg=12, className="mt-2")
-            ])
         ])
     ], className="mb-4")
 
@@ -198,14 +192,13 @@ def register_advertising_callbacks(app):
         Output('channel-conversion-chart', 'figure'),
         Output('roi-trend-chart', 'figure'),
         Output('top-ctr-campaigns-chart', 'figure')],
-        [Input('apply-service-filters', 'n_clicks')],
-        [State('date-range', 'start_date'),
-        State('date-range', 'end_date'),
-        State('campaign-filter', 'value'),
-        State('ad-channel-filter', 'value'),
-        State('ad-category-filter', 'value')]
+        [Input('date-range', 'start_date'),
+        Input('date-range', 'end_date'),
+        Input('campaign-filter', 'value'),
+        Input('ad-channel-filter', 'value'),
+        Input('ad-category-filter', 'value')]
     )
-    def update_advertising_dashboard(n_clicks, start_date, end_date, selected_campaign, selected_channel, selected_category):
+    def update_advertising_dashboard(start_date, end_date, selected_campaign, selected_channel, selected_category):
         """Обновить дашборд рекламы и маркетинга"""
         try:
             params = {

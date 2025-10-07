@@ -84,12 +84,6 @@ def create_service_filters():
                 dbc.Col(create_segment_filter(), lg=3, md=6),
                 dbc.Col(create_issue_type_filter(), lg=3, md=6),
             ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
-                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
-                ], lg=12, className="mt-2")
-            ])
         ])
     ], className="mb-4")
 
@@ -103,14 +97,13 @@ def register_service_callbacks(app):
          Output('resolution-time-chart', 'figure'),
          Output('support-returns-chart', 'figure'),
          Output('regional-support-chart', 'figure')],
-        [Input('apply-service-filters', 'n_clicks')],
-        [State('date-range', 'start_date'),
-         State('date-range', 'end_date'),
-         State('issue-type-filter', 'value'),
-         State('service-segment-filter', 'value'),
-         State('service-region-filter', 'value')]
+        [Input('date-range', 'start_date'),
+         Input('date-range', 'end_date'),
+         Input('issue-type-filter', 'value'),
+         Input('service-segment-filter', 'value'),
+         Input('service-region-filter', 'value')]
     )
-    def update_service_dashboard(n_clicks, start_date, end_date, issue_type, segment, region):
+    def update_service_dashboard(start_date, end_date, issue_type, segment, region):
         """Обновить дашборд с применением фильтров"""
         try:
             params = {

@@ -115,15 +115,7 @@ def create_customer_filters():
                         clearable=False,
                     ),
                 ], lg=3, md=6, className="mb-3"),
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-customer-filters", 
-                              color="primary", className="me-2"),
-                    dbc.Button("Сбросить", id="reset-customer-filters", 
-                              color="outline-secondary"),
-                ], lg=12, className="mb-3"),
-            ]),
+            ])
         ])
     ], className="mb-4")
 
@@ -140,12 +132,10 @@ def register_customer_callbacks(app):
          Output('traffic-channels-chart', 'figure'),
          Output('user-devices-chart', 'figure'),
          Output('customer-loyalty-chart', 'figure')],
-        [Input('apply-customer-filters', 'n_clicks'),
-         Input('interval-component', 'n_intervals')],
         [Input('date-range', 'start_date'),
          Input('date-range', 'end_date')]
     )
-    def update_customer_dashboard(n_clicks, n_intervals, start_date, end_date):
+    def update_customer_dashboard(start_date, end_date):
         """Обновить дашборд клиентов и поведения"""
         try:
             params = {

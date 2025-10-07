@@ -1,6 +1,7 @@
 from dash import dcc, html, Output, Input, callback
 import dash_bootstrap_components as dbc
 from datetime import datetime, timedelta
+from src.database.queries.common import CHANNELS_QUERY, REGIONS_QUERY, CATEGORIES_QUERY, SEGMENTS_QUERY
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,49 @@ def create_date_filter():
         ], id='date-range-container', style={'display': 'none'})
     ])
 
+def create_issue_type_filter():
+    """Фильтр по типу обращения, загружается через callback"""
+    return html.Div([
+        html.Label("📬 Тип обращения", className="form-label"),
+        dcc.Dropdown(
+            id='issue-type-filter',
+            options=[],  # Загружается через callback
+            value='all',
+            placeholder="Все типы",
+            clearable=False,
+            className="mb-2"
+        )
+    ])
+
+def create_segment_filter():
+    """Фильтр по сегменту клиента"""
+    return html.Div([
+        html.Label("👥 Сегмент клиента", className="form-label"),
+        dcc.Dropdown(
+            id='service-segment-filter',
+            options=[],  # Загружается через callback
+            value='all',
+            placeholder="Все сегменты",
+            clearable=False,
+            className="mb-2"
+        )
+    ])
+
+def create_region_filter():
+    """Фильтр по региону клиента"""
+    return html.Div([
+        html.Label("📍 Регион клиента", className="form-label"),
+        dcc.Dropdown(
+            id='service-region-filter',
+            options=[],  # Загружается через callback
+            value='all',
+            placeholder="Все регионы",
+            clearable=False,
+            className="mb-2"
+        )
+    ])
+
+
 def create_category_filter():
     """Создать фильтр категорий с загрузкой данных"""
     return html.Div([
@@ -65,19 +109,6 @@ def create_supplier_filter():
             value='all',
             clearable=False,
             placeholder="Все поставщики"
-        ),
-    ])
-
-def create_segment_filter():
-    """Создать фильтр сегментов пользователей"""
-    return html.Div([
-        html.Label("👥 Сегмент", className="form-label"),
-        dcc.Dropdown(
-            id='segment-filter',
-            options=[],  # Будет заполнено через callback
-            value='all',
-            clearable=False,
-            placeholder="Загрузка сегментов..."
         ),
     ])
 
@@ -165,20 +196,36 @@ def register_filter_callbacks(app):
     )
     def load_categories(trigger):
         """Загрузить категории из базы данных"""
-        logger.info("Loading categories from database...")
-        query = "SELECT DISTINCT category FROM products WHERE category IS NOT NULL ORDER BY category"
-        return load_filter_options(query, "Все категории")
+        return load_filter_options(CATEGORIES_QUERY, "Все категории")
     
+    # Загрузка сегментов
     @app.callback(
-        Output('segment-filter', 'options'),
-        [Input('app-load', 'children')],
+        Output('service-segment-filter', 'options'),
+        Input('app-load', 'children'),
         prevent_initial_call=False
     )
     def load_segments(trigger):
-        """Загрузить сегменты пользователей"""
-        logger.info("Loading segments from database...")
-        query = "SELECT DISTINCT segment FROM user_segments WHERE segment IS NOT NULL ORDER BY segment"
-        return load_filter_options(query, "Все сегменты")
+        return load_filter_options(SEGMENTS_QUERY, "Все сегменты")
+    
+    # Загрузка типов обращений
+    @app.callback(
+        Output('issue-type-filter', 'options'),
+        Input('app-load', 'children'),
+        prevent_initial_call=False
+    )
+    def load_issue_types(trigger):
+        query = "SELECT DISTINCT issue_type FROM customer_support WHERE issue_type IS NOT NULL ORDER BY issue_type"
+        return load_filter_options(query, "Все типы")
+    
+    # Загрузка регионов
+    @app.callback(
+    Output('service-region-filter', 'options'),
+    Input('app-load', 'children'),
+    prevent_initial_call=False
+    )
+    def load_regions(trigger):
+        """Загрузить регионы из user_segments"""
+        return load_filter_options(REGIONS_QUERY, "Все регионы")
     
     @app.callback(
         Output('channel-filter', 'options'),
@@ -187,9 +234,7 @@ def register_filter_callbacks(app):
     )
     def load_channels(trigger):
         """Загрузить каналы трафика"""
-        logger.info("Loading channels from database...")
-        query = "SELECT DISTINCT channel FROM traffic WHERE channel IS NOT NULL ORDER BY channel"
-        return load_filter_options(query, "Все каналы")
+        return load_filter_options(CHANNELS_QUERY, "Все каналы")
     
     @callback(
     Output('supplier-filter', 'options'),

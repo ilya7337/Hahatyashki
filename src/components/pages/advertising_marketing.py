@@ -1,4 +1,4 @@
-from dash import html, dcc, Input, Output, callback
+from dash import html, dcc, Input, Output, callback, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
@@ -81,58 +81,139 @@ def create_advertising_filters():
             dbc.Row([
                 dbc.Col(create_date_filter(), lg=4, md=6),
                 dbc.Col([
-                    html.Label("Кампания", className="form-label"),
+                    html.Label("📊 Кампания", className="form-label"),
                     dcc.Dropdown(
                         id='campaign-filter',
-                        options=[{'label': 'Все кампании', 'value': 'all'}],
+                        options=[],  # Будет заполнено через callback
                         value='all',
                         clearable=False,
+                        placeholder="Загрузка кампаний..."
                     ),
                 ], lg=4, md=6, className="mb-3"),
                 dbc.Col([
-                    html.Label("Канал трафика", className="form-label"),
+                    html.Label("🌐 Канал трафика", className="form-label"),
                     dcc.Dropdown(
                         id='ad-channel-filter',
-                        options=[{'label': 'Все каналы', 'value': 'all'}],
+                        options=[],  # Будет заполнено через callback
                         value='all',
                         clearable=False,
+                        placeholder="Загрузка каналов..."
+                    ),
+                ], lg=4, md=6, className="mb-3"),
+                dbc.Col([
+                    html.Label("📦 Категория товаров", className="form-label"),
+                    dcc.Dropdown(
+                        id='ad-category-filter',
+                        options=[],  # Будет заполнено через callback
+                        value='all',
+                        clearable=False,
+                        placeholder="Загрузка категорий..."
                     ),
                 ], lg=4, md=6, className="mb-3"),
             ]),
             dbc.Row([
                 dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-advertising-filters", 
-                              color="primary", className="me-2"),
-                    dbc.Button("Сбросить", id="reset-advertising-filters", 
-                              color="outline-secondary"),
-                ], lg=12, className="mb-3"),
-            ]),
+                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
+                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
+                ], lg=12, className="mt-2")
+            ])
         ])
     ], className="mb-4")
 
-# Callbacks для рекламы и маркетинга
+
 def register_advertising_callbacks(app):
-    """Зарегистрировать callback'ы для рекламы"""
-    
+    # Callbacks для загрузки фильтров из базы данных
+    @app.callback(
+        Output('campaign-filter', 'options'),
+        [Input('interval-component', 'n_intervals')]
+    )
+    def load_campaigns(n_intervals):
+        """Загрузить кампании из базы данных"""
+        try:
+            logger.info("Loading campaigns from database...")
+            query = "SELECT DISTINCT campaign_name FROM ad_revenue WHERE campaign_name IS NOT NULL AND campaign_name != '' ORDER BY campaign_name"
+            return load_filter_options(query, "Все кампании")
+        except Exception as e:
+            logger.error(f"Error loading campaigns: {e}")
+            return [{'label': 'Все кампании', 'value': 'all'}]
+
+    @app.callback(
+        Output('ad-channel-filter', 'options'),
+        [Input('interval-component', 'n_intervals')]
+    )
+    def load_ad_channels(n_intervals):
+        """Загрузить каналы трафика для рекламы"""
+        try:
+            logger.info("Loading ad channels from database...")
+            query = "SELECT DISTINCT channel FROM traffic WHERE channel IS NOT NULL AND channel != '' ORDER BY channel"
+            return load_filter_options(query, "Все каналы")
+        except Exception as e:
+            logger.error(f"Error loading ad channels: {e}")
+            return [{'label': 'Все каналы', 'value': 'all'}]
+
+    @app.callback(
+        Output('ad-category-filter', 'options'),
+        [Input('interval-component', 'n_intervals')]
+    )
+    def load_ad_categories(n_intervals):
+        """Загрузить категории для рекламы"""
+        try:
+            logger.info("Loading categories for advertising from database...")
+            query = "SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category"
+            return load_filter_options(query, "Все категории")
+        except Exception as e:
+            logger.error(f"Error loading categories for advertising: {e}")
+            return [{'label': 'Все категории', 'value': 'all'}]
+
+    def load_filter_options(query, default_label="Все"):
+        """Вспомогательная функция для загрузки опций фильтра"""
+        try:
+            result = db_manager.execute_query(query)
+            if not result.empty:
+                column_name = result.columns[0]
+                options = [{'label': default_label, 'value': 'all'}]
+                for _, row in result.iterrows():
+                    value = row[column_name]
+                    if value:
+                        options.append({
+                            'label': str(value),
+                            'value': str(value)
+                        })
+                logger.info(f"Успешно загружено {len(options)} опций для фильтра")
+                return options
+            else:
+                logger.warning(f"Нет данных для запроса: {query}")
+                return [{'label': default_label, 'value': 'all'}]
+                
+        except Exception as e:
+            logger.error(f"Ошибка загрузки опций фильтра: {e}")
+            return [{'label': default_label, 'value': 'all'}]
+
+    # Основной callback для обновления дашборда
     @app.callback(
         [Output('advertising-kpi-cards', 'children'),
-         Output('ad-performance-chart', 'figure'),
-         Output('ad-trend-chart', 'figure'),
-         Output('product-ad-performance-chart', 'figure'),
-         Output('channel-conversion-chart', 'figure'),
-         Output('roi-trend-chart', 'figure'),
-         Output('top-ctr-campaigns-chart', 'figure')],
-        [Input('apply-advertising-filters', 'n_clicks'),
-         Input('interval-component', 'n_intervals')],
-        [Input('date-range', 'start_date'),
-         Input('date-range', 'end_date')]
+        Output('ad-performance-chart', 'figure'),
+        Output('ad-trend-chart', 'figure'),
+        Output('product-ad-performance-chart', 'figure'),
+        Output('channel-conversion-chart', 'figure'),
+        Output('roi-trend-chart', 'figure'),
+        Output('top-ctr-campaigns-chart', 'figure')],
+        [Input('apply-service-filters', 'n_clicks')],
+        [State('date-range', 'start_date'),
+        State('date-range', 'end_date'),
+        State('campaign-filter', 'value'),
+        State('ad-channel-filter', 'value'),
+        State('ad-category-filter', 'value')]
     )
-    def update_advertising_dashboard(n_clicks, n_intervals, start_date, end_date):
+    def update_advertising_dashboard(n_clicks, start_date, end_date, selected_campaign, selected_channel, selected_category):
         """Обновить дашборд рекламы и маркетинга"""
         try:
             params = {
                 'start_date': start_date,
-                'end_date': end_date
+                'end_date': end_date,
+                'campaign': selected_campaign if selected_campaign != 'all' else None,
+                'channel': selected_channel if selected_channel != 'all' else None,
+                'category': selected_category if selected_category != 'all' else None
             }
             
             # Получение данных
@@ -156,13 +237,13 @@ def register_advertising_callbacks(app):
             ctr_fig = create_top_ctr_campaigns_chart(ctr_data)
             
             return [kpi_cards, ad_performance_fig, ad_trend_fig, product_ad_fig, 
-                   channel_fig, roi_trend_fig, ctr_fig]
+                channel_fig, roi_trend_fig, ctr_fig]
             
         except Exception as e:
             logger.error(f"Error updating advertising dashboard: {e}")
             empty_fig = px.bar(title="Нет данных")
             return [html.Div("Ошибка загрузки данных")] + [empty_fig] * 6
-    
+        
     return app
 
 def get_advertising_kpi_data(params):

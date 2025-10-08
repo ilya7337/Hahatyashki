@@ -53,22 +53,35 @@ class ChartBuilder:
     
     @staticmethod
     def create_category_sales_chart(data: pd.DataFrame) -> go.Figure:
-        """Создать график продаж по категориям"""
+        """Создать круговую диаграмму продаж по категориям"""
         if data.empty:
             return go.Figure().update_layout(title="Нет данных")
         
-        fig = px.bar(
+        fig = px.pie(
             data, 
-            x='category_revenue', 
-            y='category',
-            orientation='h',
-            title='Продажи по категориям',
-            labels={'category_revenue': 'Выручка (руб)', 'category': 'Категория'},
-            color='category_revenue',
-            color_continuous_scale='Viridis'
+            values='category_revenue', 
+            names='category',
+            title='Распределение продаж по категориям',
+            color_discrete_sequence=px.colors.qualitative.Set3
         )
         
-        fig.update_layout(showlegend=False)
+        fig.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            hovertemplate='<b>%{label}</b><br>Выручка: %{value:,.0f} руб<br>Доля: %{percent}'
+        )
+        
+        fig.update_layout(
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.1
+            )
+        )
+        
         return fig
     
     @staticmethod

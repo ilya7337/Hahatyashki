@@ -8,7 +8,7 @@ from src.database.connection import db_manager
 from src.database.queries.customer_behavior import *
 from src.components.kpi_cards import create_kpi_card
 from src.components.charts import chart_builder
-from src.components.filters import create_date_filter
+from src.components.filters import create_date_filter, create_region_filter, create_segment_filter, create_supplier_filter
 from src.utils.data_processor import data_processor
 
 logger = logging.getLogger(__name__)
@@ -88,42 +88,10 @@ def create_customer_filters():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(create_date_filter(), lg=3, md=6),
-                dbc.Col([
-                    html.Label("Сегмент клиентов", className="form-label"),
-                    dcc.Dropdown(
-                        id='customer-segment-filter',
-                        options=[{'label': 'Все сегменты', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Регион", className="form-label"),
-                    dcc.Dropdown(
-                        id='region-filter',
-                        options=[{'label': 'Все регионы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-                dbc.Col([
-                    html.Label("Канал трафика", className="form-label"),
-                    dcc.Dropdown(
-                        id='traffic-channel-filter',
-                        options=[{'label': 'Все каналы', 'value': 'all'}],
-                        value='all',
-                        clearable=False,
-                    ),
-                ], lg=3, md=6, className="mb-3"),
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-customer-filters", 
-                              color="primary", className="me-2"),
-                    dbc.Button("Сбросить", id="reset-customer-filters", 
-                              color="outline-secondary"),
-                ], lg=12, className="mb-3"),
-            ]),
+                dbc.Col(create_segment_filter(), lg=3, md=6, className="mb-3"),
+                dbc.Col(create_region_filter(), lg=3, md=6, className="mb-3"),
+                dbc.Col(create_supplier_filter(), lg=3, md=6)
+            ])
         ])
     ], className="mb-4")
 
@@ -140,22 +108,26 @@ def register_customer_callbacks(app):
          Output('traffic-channels-chart', 'figure'),
          Output('user-devices-chart', 'figure'),
          Output('customer-loyalty-chart', 'figure')],
-        [Input('apply-customer-filters', 'n_clicks'),
-         Input('interval-component', 'n_intervals')],
         [Input('date-range', 'start_date'),
-         Input('date-range', 'end_date')]
+         Input('date-range', 'end_date'),
+         Input('service-segment-filter', 'value'),
+         Input('service-region-filter', 'value'),
+         Input('supplier-filter', 'value')]
     )
-    def update_customer_dashboard(n_clicks, n_intervals, start_date, end_date):
+    def update_customer_dashboard(start_date, end_date, segment, region, supplier):
         """Обновить дашборд клиентов и поведения"""
         try:
             params = {
                 'start_date': start_date,
-                'end_date': end_date
+                'end_date': end_date,
+                'segment': segment if segment != 'all' else None,
+                'region': region if region != 'all' else None,
+                'supplier': supplier if supplier != 'all' else None
             }
             
             # Получение данных
             kpi_data = get_customer_kpi_data(params)
-            segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, {})
+            segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, params)
             funnel_data = db_manager.execute_query(EVENTS_FUNNEL_QUERY, params)
             regional_data = db_manager.execute_query(REGIONAL_ACTIVITY_QUERY, params)
             segment_behavior_data = db_manager.execute_query(SEGMENT_BEHAVIOR_QUERY, params)
@@ -188,24 +160,32 @@ def register_customer_callbacks(app):
 def get_customer_kpi_data(params):
     """Получить данные для KPI клиентов"""
     try:
-        # Расчет основных метрик клиентов
-        segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, {})
+        segments_data = db_manager.execute_query(USER_SEGMENTS_QUERY, params)
         funnel_data = db_manager.execute_query(EVENTS_FUNNEL_QUERY, params)
+        orders_data = db_manager.execute_query(REGIONAL_ACTIVITY_QUERY, params)  # содержит total_orders
         
         total_users = segments_data['users_count'].sum() if not segments_data.empty else 0
+        total_orders = orders_data['total_orders'].sum() if not orders_data.empty else 0
         
-        # Расчет конверсии из воронки
+        # Конверсия из воронки
         conversion_rate = 0
         if not funnel_data.empty:
             views = funnel_data[funnel_data['event_type'] == 'view']['events_count'].sum()
             purchases = funnel_data[funnel_data['event_type'] == 'purchase']['events_count'].sum()
             conversion_rate = (purchases / views * 100) if views > 0 else 0
         
+        # Среднее количество заказов на пользователя
+        avg_orders_per_user = (total_orders / total_users) if total_users > 0 else 0
+        
+        # Доля активных пользователей (сделавших хотя бы один заказ)
+        active_users = orders_data[orders_data['total_orders'] > 0]['total_users'].sum() if not orders_data.empty else 0
+        active_user_rate = (active_users / total_users * 100) if total_users > 0 else 0
+        
         return {
             'total_users': f"{total_users:,}",
             'conversion_rate': f"{conversion_rate:.1f}%",
-            'avg_session_duration': '--',
-            'bounce_rate': '--'
+            'avg_orders_per_user': f"{avg_orders_per_user:.2f}",
+            'active_user_rate': f"{active_user_rate:.1f}%"
         }
         
     except Exception as e:
@@ -226,13 +206,13 @@ def create_customer_kpi_cards(kpi_data):
         ), lg=3, md=6, className="mb-3"),
         
         dbc.Col(create_kpi_card(
-            "⏱️ Ср. время сессии", 
-            kpi_data.get('avg_session_duration', '--')
+            "🛒 Ср. заказов на пользователя", 
+            kpi_data.get('avg_orders_per_user', '0')
         ), lg=3, md=6, className="mb-3"),
         
         dbc.Col(create_kpi_card(
-            "🎯 Отскок", 
-            kpi_data.get('bounce_rate', '--')
+            "🎯 Активные пользователи", 
+            kpi_data.get('active_user_rate', '0%')
         ), lg=3, md=6, className="mb-3"),
     ], className="g-3")
 

@@ -1,6 +1,7 @@
 from dash import html, dcc, Input, Output, callback, State
 import dash_bootstrap_components as dbc
 import plotly.express as px
+import plotly.graph_objects as go 
 import pandas as pd
 import logging
 
@@ -21,18 +22,18 @@ def create_business_sales_layout():
             dbc.Row([
                 dbc.Col([
                     html.H1("💰 Бизнес-аналитика и продажи", 
-                           style={'color': '#2C3E50', 'marginBottom': '10px'}),
+                           className="business-sales-title"),
                     html.P("Анализ продаж, выручки, поставщиков и складских запасов", 
-                          style={'color': '#7F8C8D', 'marginBottom': '30px'}),
+                          className="business-sales-subtitle"),
                 ])
             ])
-        ], fluid=True),
+        ], fluid=True, className="business-sales-container"),
         
         # Фильтры
         create_business_filters(),
         
         # KPI карточки
-        html.Div(id="business-kpi-cards", style={'marginBottom': '2rem'}),
+        html.Div(id="business-kpi-cards", className="business-kpi-section"),
         
         # Основные графики
         dbc.Container([
@@ -40,11 +41,11 @@ def create_business_sales_layout():
             dbc.Row([
                 dbc.Col(
                     dcc.Graph(id="sales-trend-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
                 dbc.Col(
                     dcc.Graph(id="category-sales-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
             ]),
             
@@ -52,11 +53,11 @@ def create_business_sales_layout():
             dbc.Row([
                 dbc.Col(
                     dcc.Graph(id="supplier-performance-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
                 dbc.Col(
                     dcc.Graph(id="returns-analysis-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
             ]),
             
@@ -64,18 +65,18 @@ def create_business_sales_layout():
             dbc.Row([
                 dbc.Col(
                     dcc.Graph(id="inventory-status-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
                 dbc.Col(
                     dcc.Graph(id="top-products-chart"),
-                    lg=6, className="mb-4"
+                    lg=6, className="business-chart-container"
                 ),
             ]),
         ], fluid=True),
         
         # Скрытые элементы
         dcc.Store(id='business-data-store'),
-    ])
+    ], className="business-sales-container")
 
 def create_business_filters():
     """Создать фильтры для бизнес-аналитики"""
@@ -86,14 +87,8 @@ def create_business_filters():
                 dbc.Col(create_category_filter(), lg=4, md=6),
                 dbc.Col(create_supplier_filter(), lg=4, md=6),
             ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Button("Применить фильтры", id="apply-service-filters", color="primary"),
-                    dbc.Button("Сбросить", id="reset-service-filters", color="outline-secondary", className="ms-2")
-                ], lg=12, className="mt-2")
-            ])
         ])
-    ], className="mb-4")
+    ], className="business-filters-card")
 
 # Callbacks для бизнес-аналитики
 def register_business_callbacks(app):
@@ -107,13 +102,12 @@ def register_business_callbacks(app):
          Output('returns-analysis-chart', 'figure'),
          Output('inventory-status-chart', 'figure'),
          Output('top-products-chart', 'figure')],
-        [Input('apply-service-filters', 'n_clicks')],
-        [State('date-range', 'start_date'),
-         State('date-range', 'end_date'),
-         State('basic-category-filter', 'value'),
-         State('supplier-filter', 'value')]
+        [Input('date-range', 'start_date'),
+         Input('date-range', 'end_date'),
+         Input('basic-category-filter', 'value'),
+         Input('supplier-filter', 'value')]
     )
-    def update_business_dashboard(n_clicks, start_date, end_date, selected_category, supplier):
+    def update_business_dashboard(start_date, end_date, selected_category, supplier):
         """Обновить дашборд бизнес-аналитики"""
         from datetime import datetime
         try:
@@ -138,23 +132,213 @@ def register_business_callbacks(app):
             # Создание KPI карточек
             kpi_cards = create_business_kpi_cards(kpi_data)
             
-            # Создание графиков
-            sales_fig = chart_builder.create_sales_trend_chart(sales_trend_data)
-            category_fig = chart_builder.create_category_sales_chart(category_data)
-            supplier_fig = create_supplier_performance_chart(supplier_data)
-            returns_fig = chart_builder.create_returns_analysis_chart(returns_data)
-            inventory_fig = chart_builder.create_inventory_status_chart(inventory_data)
-            top_products_fig = create_top_products_chart(top_products_data)
+            # Создание графиков с улучшенным дизайном
+            sales_fig = create_enhanced_sales_trend_chart(sales_trend_data)
+            category_fig = create_enhanced_category_sales_chart(category_data)
+            supplier_fig = create_enhanced_supplier_performance_chart(supplier_data)
+            returns_fig = create_enhanced_returns_analysis_chart(returns_data)
+            inventory_fig = create_enhanced_inventory_status_chart(inventory_data)
+            top_products_fig = create_enhanced_top_products_chart(top_products_data)
             
             return [kpi_cards, sales_fig, category_fig, supplier_fig, returns_fig, inventory_fig, top_products_fig]
             
         except Exception as e:
             logger.error(f"Error updating business dashboard: {e}")
-            empty_fig = px.line(title="Нет данных")
-            return [html.Div("Ошибка загрузки данных")] + [empty_fig] * 6
+            empty_fig = create_empty_chart()
+            return [html.Div("Ошибка загрузки данных", className="text-danger")] + [empty_fig] * 6
     
     return app
 
+def create_empty_chart():
+    """Создать пустой график с единым стилем"""
+    fig = go.Figure()
+    fig.update_layout(
+        title=dict(
+            text="Нет данных",
+            x=0.5,
+            font=dict(size=16, color="#6c757d")
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=400
+    )
+    return fig
+
+def create_enhanced_sales_trend_chart(data):
+    """Создать улучшенный график динамики продаж"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = px.line(
+        data,
+        x='date',
+        y='daily_revenue',
+        title='Динамика продаж',
+        color_discrete_sequence=['#2E86AB']
+    )
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        title_font_size=18,
+        height=400
+    )
+    
+    return fig
+
+def create_enhanced_category_sales_chart(data):
+    """Создать улучшенный график продаж по категориям"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = px.bar(
+        data,
+        x='category_revenue',
+        y='category',
+        orientation='h',
+        title='Продажи по категориям',
+        color='category_revenue',
+        color_continuous_scale=['#A23B72', '#F18F01', '#C73E1D']
+    )
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        title_font_size=18,
+        height=400,
+        showlegend=False
+    )
+    
+    return fig
+
+def create_enhanced_supplier_performance_chart(data):
+    """Создать улучшенный график производительности поставщиков"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = go.Figure()
+    
+    # Добавляем столбцы для выручки
+    fig.add_trace(go.Bar(
+        name='Выручка',
+        x=data['supplier_name'],
+        y=data['total_revenue'],
+        marker_color='#2E86AB',
+        hovertemplate='<b>%{x}</b><br>Выручка: %{y:,.0f} руб<br>Заказы: %{customdata}',
+        customdata=data['orders_count']
+    ))
+    
+    # Добавляем линию для рейтинга
+    fig.add_trace(go.Scatter(
+        name='Рейтинг',
+        x=data['supplier_name'],
+        y=data['supplier_rating'],
+        mode='lines+markers',
+        line=dict(color='#F18F01', width=3),
+        marker=dict(size=8, color='#F18F01'),
+        yaxis='y2',
+        hovertemplate='<b>%{x}</b><br>Рейтинг: %{y:.1f}'
+    ))
+    
+    fig.update_layout(
+        title='Производительность поставщиков',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        xaxis=dict(tickangle=45),
+        yaxis=dict(title='Выручка (руб)', titlefont=dict(color='#2E86AB')),
+        yaxis2=dict(
+            title='Рейтинг',
+            titlefont=dict(color='#F18F01'),
+            overlaying='y',
+            side='right',
+            range=[0, 5]
+        ),
+        hovermode='x unified',
+        height=400
+    )
+    
+    return fig
+
+def create_enhanced_returns_analysis_chart(data):
+    """Создать улучшенный график анализа возвратов"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = px.pie(
+        data,
+        values='returns_count',
+        names='reason',
+        title='Анализ возвратов по причинам',
+        color_discrete_sequence=['#A23B72', '#F18F01', '#C73E1D', '#3C91E6', '#2E86AB']
+    )
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        title_font_size=18,
+        height=400
+    )
+    
+    return fig
+
+def create_enhanced_inventory_status_chart(data):
+    """Создать улучшенный график статуса склада"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = px.bar(
+        data,
+        x='total_stock',
+        y='category',
+        orientation='h',
+        title='Остатки на складе по категориям',
+        color='total_stock',
+        color_continuous_scale=['#3C91E6', '#2E86AB']
+    )
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        title_font_size=18,
+        height=400,
+        showlegend=False
+    )
+    
+    return fig
+
+def create_enhanced_top_products_chart(data):
+    """Создать улучшенный график топ товаров"""
+    if data.empty:
+        return create_empty_chart()
+    
+    fig = px.bar(
+        data,
+        x='total_revenue',
+        y='product_name',
+        orientation='h',
+        title='Топ товаров по выручке',
+        color='total_revenue',
+        color_continuous_scale=['#C73E1D', '#F18F01']
+    )
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color="#2C3E50"),
+        title_font_size=18,
+        height=400,
+        showlegend=False,
+        yaxis={'categoryorder': 'total ascending'}
+    )
+    
+    return fig
+
+# Остальные функции остаются без изменений
 def get_business_kpi_data(params):
     """Получить данные для KPI бизнес-аналитики"""
     try:
@@ -193,68 +377,20 @@ def create_business_kpi_cards(kpi_data):
         dbc.Col(create_kpi_card(
             "💰 Общая выручка", 
             kpi_data.get('total_revenue', '0 ₽')
-        ), lg=3, md=6, className="mb-3"),
+        ), lg=3, md=6, className="mb-3 kpi-card-revenue"),
         
         dbc.Col(create_kpi_card(
             "📦 Количество заказов", 
             kpi_data.get('total_orders', '0')
-        ), lg=3, md=6, className="mb-3"),
+        ), lg=3, md=6, className="mb-3 kpi-card-orders"),
         
         dbc.Col(create_kpi_card(
             "🛒 Средний чек", 
             kpi_data.get('avg_order_value', '0 ₽')
-        ), lg=3, md=6, className="mb-3"),
+        ), lg=3, md=6, className="mb-3 kpi-card-avg-order"),
         
         dbc.Col(create_kpi_card(
             "🔄 Уровень возвратов", 
             kpi_data.get('return_rate', '0%')
-        ), lg=3, md=6, className="mb-3"),
+        ), lg=3, md=6, className="mb-3 kpi-card-returns"),
     ], className="g-3")
-
-def create_supplier_performance_chart(data):
-    """Создать график производительности поставщиков"""
-    if data.empty:
-        return px.bar(title="Нет данных")
-    
-    fig = px.scatter(
-        data,
-        x='orders_count',
-        y='total_revenue',
-        size='supplier_rating',
-        color='supplier_rating',
-        hover_name='supplier_name',
-        title='Производительность поставщиков',
-        labels={
-            'orders_count': 'Количество заказов',
-            'total_revenue': 'Общая выручка',
-            'supplier_rating': 'Рейтинг поставщика'
-        },
-        size_max=40
-    )
-    
-    return fig
-
-def create_top_products_chart(data):
-    """Создать график топ товаров"""
-    if data.empty:
-        return px.bar(title="Нет данных")
-    
-    fig = px.bar(
-        data,
-        x='total_revenue',
-        y='product_name',  
-        orientation='h',
-        color='category',
-        title='Топ товаров по выручке',
-        labels={
-            'total_revenue': 'Выручка',
-            'product_name': 'Название товара',  
-            'category': 'Категория'
-        }
-    )
-    
-    fig.update_layout(
-        showlegend=True,
-        yaxis={'categoryorder': 'total ascending'}  
-    )
-    return fig

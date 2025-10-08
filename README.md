@@ -8,7 +8,6 @@
 # Структура проекта
 
 
-<img width="395" height="738" alt="image" src="https://github.com/user-attachments/assets/de4ef768-a5a9-4e24-90b0-1e741d6e10a0" />
 
 
 

@@ -159,24 +159,31 @@ def get_service_kpi_data(params):
     """Получить данные для KPI качества обслуживания"""
     try:
         support_data = db_manager.execute_query(SUPPORT_METRICS_QUERY, params)
+        returns_data = db_manager.execute_query(SUPPORT_RETURNS_CORRELATION_QUERY, params)
         
         if support_data.empty:
             return {
                 'total_tickets': '0',
                 'avg_resolution_time': '0 мин',
                 'resolution_rate': '0%',
-                'satisfaction_score': '--'
+                'returns_rate': '0%'
             }
         
         total_tickets = support_data['tickets_count'].sum()
         avg_resolution_time = support_data['avg_resolution_time'].mean()
         resolution_rate = support_data['resolution_rate'].mean()
         
+        # Вычисляем долю возвратов: sum(returns) / sum(tickets)
+        returns_rate = 0
+        if not returns_data.empty:
+            total_returns = returns_data['returns_count'].sum()
+            returns_rate = (total_returns / total_tickets * 100) if total_tickets > 0 else 0
+        
         return {
             'total_tickets': f"{total_tickets:,}",
             'avg_resolution_time': f"{avg_resolution_time:.0f} мин",
             'resolution_rate': f"{resolution_rate:.1f}%",
-            'satisfaction_score': '--'
+            'returns_rate': f"{returns_rate:.1f}%"
         }
         
     except Exception as e:
@@ -202,8 +209,8 @@ def create_service_kpi_cards(kpi_data):
         ), lg=3, md=6, className="mb-3"),
         
         dbc.Col(create_kpi_card(
-            "⭐ Удовлетворенность", 
-            kpi_data.get('satisfaction_score', '--')
+            "↩️ Доля возвратов", 
+            kpi_data.get('returns_rate', '0%')
         ), lg=3, md=6, className="mb-3"),
     ], className="g-3")
 
